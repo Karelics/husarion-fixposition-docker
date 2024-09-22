@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "-c"]
 
 WORKDIR /ros2_ws
 
-# install everything needed
+# Install Fixposition driver
 RUN apt-get update && apt-get install -y \
         python3-pip \
         python3-colcon-common-extensions \
@@ -15,21 +15,14 @@ RUN apt-get update && apt-get install -y \
         python3-vcstool \
         git && \
     apt-get upgrade -y && \
-    # Can't install deps with rosdep, because there are ROS1 dependencies mixed and I couldn't get it to work, even with selective rosdep commands
-    apt-get install -y \
-        ros-${ROS_DISTRO}-tf2-ros \
-        ros-${ROS_DISTRO}-tf2-eigen \
-        libboost-all-dev \
-        libeigen3-dev && \
-    source "/opt/ros/$ROS_DISTRO/setup.bash" && \
-    git clone https://github.com/fixposition/fixposition_driver.git /ros2_ws/src/fixposition_driver && \
-    git clone https://github.com/fixposition/fixposition_gnss_tf.git /ros2_ws/src/fixposition_gnss_tf && \
-    rm -r src/fixposition_driver/fixposition_driver_ros1 && \
-    rm -r src/fixposition_driver/fixposition_odometry_converter && \
-    rm -rf /etc/ros/rosdep/sources.list.d/20-default.list && \
+    . /opt/ros/${ROS_DISTRO}/setup.bash && \
+    git clone -b 7.0.2 https://github.com/fixposition/fixposition_driver.git /ros2_ws/src/fixposition_driver && \
+    rm -rf /ros2_ws/src/fixposition_driver/fixposition_driver_ros1 /ros2_ws/src/fixposition_driver/fixposition_odometry_converter_ros1 && \
     rosdep init && \
     rosdep update --rosdistro $ROS_DISTRO && \
-    colcon build && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    colcon build --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release && \
+    rm -r /ros2_ws/src /ros2_ws/log  /ros2_ws/build && \
     export SUDO_FORCE_REMOVE=yes && \
     apt-get remove -y \
         python3-colcon-common-extensions \
