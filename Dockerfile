@@ -7,6 +7,8 @@ SHELL ["/bin/bash", "-c"]
 
 WORKDIR /ros2_ws
 
+COPY fixposition_bringup /ros2_ws/src/fixposition_bringup
+
 # Install Fixposition driver
 RUN apt-get update && apt-get install -y \
         python3-pip \
